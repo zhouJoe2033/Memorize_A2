@@ -18,8 +18,7 @@ struct MemoryGame<CardContent> where CardContent: Equatable {
         }
         set{
             for index in cards.indices {
-                cards[index].isFaceUp = index == newValue
-            }
+                cards[index].isFaceUp = index == newValue            }
         }
     }
     
@@ -38,21 +37,31 @@ struct MemoryGame<CardContent> where CardContent: Equatable {
     mutating func choose(card: Card) {
         if let chosenIndex: Int = cards.firstIndex(matching: card), !cards[chosenIndex].isFaceUp, !cards[chosenIndex].isMatched {
             
+            if cards[chosenIndex].seen == true {
+                EmojiMemoryGame.score -= 1
+            }
             if let potentialMatchIndex = indexOfTheOneAndOnlyFaceUpCard {
                 if cards[chosenIndex].content == cards[potentialMatchIndex].content {
                     cards[chosenIndex].isMatched = true
                     cards[potentialMatchIndex].isMatched = true
+                    
+                    EmojiMemoryGame.score += 2
                 }
+                
                 self.cards[chosenIndex].isFaceUp = true
+
             } else {
                 indexOfTheOneAndOnlyFaceUpCard = chosenIndex
             }
+
+            cards[chosenIndex].seen = true
         }
     }
     
     struct Card: Identifiable {
         var isFaceUp:Bool = false
         var isMatched: Bool = false
+        var seen: Bool = false
         var content: CardContent
         var id: Int
     }

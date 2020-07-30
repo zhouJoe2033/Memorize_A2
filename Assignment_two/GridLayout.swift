@@ -36,7 +36,8 @@ struct GridLayout {
                 }
             }
         }
-        rowCount = bestLayout.rowCount
+        // -1 in the future, make it more dynamic, for now its for the button and text displays
+        rowCount = bestLayout.rowCount + 1
         columnCount = bestLayout.columnCount
     }
     
