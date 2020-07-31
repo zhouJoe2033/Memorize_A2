@@ -37,24 +37,30 @@ struct MemoryGame<CardContent> where CardContent: Equatable {
     mutating func choose(card: Card) {
         if let chosenIndex: Int = cards.firstIndex(matching: card), !cards[chosenIndex].isFaceUp, !cards[chosenIndex].isMatched {
             
-            if cards[chosenIndex].seen == true {
-                EmojiMemoryGame.score -= 1
-            }
             if let potentialMatchIndex = indexOfTheOneAndOnlyFaceUpCard {
                 if cards[chosenIndex].content == cards[potentialMatchIndex].content {
                     cards[chosenIndex].isMatched = true
                     cards[potentialMatchIndex].isMatched = true
                     
                     EmojiMemoryGame.score += 2
+                }else{
+     
+                    if cards[chosenIndex].seen == true {
+                        EmojiMemoryGame.score -= 1
+                    }
+                    if cards[potentialMatchIndex].seen == true {
+                           EmojiMemoryGame.score -= 1
+                    }
+
+                    cards[chosenIndex].seen = true
+                    cards[potentialMatchIndex].seen = true
                 }
-                
+
                 self.cards[chosenIndex].isFaceUp = true
 
             } else {
                 indexOfTheOneAndOnlyFaceUpCard = chosenIndex
             }
-
-            cards[chosenIndex].seen = true
         }
     }
     
