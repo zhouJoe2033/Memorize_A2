@@ -10,15 +10,14 @@ import Foundation
 
 struct MemoryGame<CardContent> where CardContent: Equatable {
     
-    var cards: Array<Card>
+   private(set) var cards: Array<Card>
     
-    var indexOfTheOneAndOnlyFaceUpCard: Int?{
-        get{
-            cards.indices.filter { cards[$0].isFaceUp}.only
-        }
+    var indexOfTheOneAndOnlyFaceUpCard: Int? {
+        get { cards.indices.filter { cards[$0].isFaceUp }.only }
         set{
             for index in cards.indices {
-                cards[index].isFaceUp = index == newValue            }
+                cards[index].isFaceUp = index == newValue
+            }
         }
     }
     
@@ -30,8 +29,7 @@ struct MemoryGame<CardContent> where CardContent: Equatable {
             cards.append(Card(content: content, id: pairIndex*2))
             cards.append(Card(content: content, id: pairIndex*2+1))
         }
-        
-        cards = cards.shuffled()
+        cards.shuffle()
     }
     
     mutating func choose(card: Card) {
@@ -42,7 +40,7 @@ struct MemoryGame<CardContent> where CardContent: Equatable {
                     cards[chosenIndex].isMatched = true
                     cards[potentialMatchIndex].isMatched = true
                     
-                    EmojiMemoryGame.score += 2
+                    EmojiMemoryGame.score += Int(cards[potentialMatchIndex].bonusTimeRemaining)
                 }else{
      
                     if cards[chosenIndex].seen == true {
@@ -65,10 +63,74 @@ struct MemoryGame<CardContent> where CardContent: Equatable {
     }
     
     struct Card: Identifiable {
-        var isFaceUp:Bool = false
-        var isMatched: Bool = false
-        var seen: Bool = false
+        var isFaceUp:Bool = false {
+            didSet {
+                if isFaceUp {
+                    startUsingBonusTime()
+                }else {
+                    stopUsingBonusTime()
+                }
+            }
+        }
+        
+        var isMatched: Bool = false{
+            didSet {
+                stopUsingBonusTime()
+            }
+        }
+        
         var content: CardContent
         var id: Int
+        var seen: Bool = false
+        
+        // MARK: - Bonus Time
+        
+        //can be 0 which means no bonus for this card
+        var bonusTimeLimit: TimeInterval = 6
+        
+        //the last time this card was turned face up && is still face up
+        var lastFaceUpDate: Date?
+        //the accumulated time this card has been face up in the past
+        var pastFaceUpTime: TimeInterval = 0
+        
+        //how much time left before the bonus opportunity runs out
+        var bonusTimeRemaining: TimeInterval {
+            max(0, bonusTimeLimit - faceUpTime)
+        }
+        //percentage of the bonus time remaining
+        var bonusRemaining: Double {
+            (bonusTimeLimit > 0 && bonusTimeRemaining > 0) ? bonusTimeRemaining/bonusTimeLimit : 0
+        }
+        //whether the card was matched during the bonus time period
+        var hasEarnedBonus: Bool {
+            isMatched && bonusTimeRemaining > 0
+        }
+        //whether we are currently face up, unmatched and have not yet used up the bonus window
+        var isConsumingBonusTime: Bool {
+            isFaceUp && !isMatched && bonusTimeRemaining > 0
+        }
+
+        // how long this card has ever been face up
+        private var faceUpTime: TimeInterval {
+            if let lastFaceUpDate = self.lastFaceUpDate {
+                return pastFaceUpTime + Date().timeIntervalSince(lastFaceUpDate)
+            } else {
+                return pastFaceUpTime
+            }
+        }
+        
+        //called when the card transition to face up state
+        private mutating func startUsingBonusTime() {
+            if isConsumingBonusTime, lastFaceUpDate == nil {
+                lastFaceUpDate = Date()
+            }
+        }
+
+        //called when the card goes back face down (or gets matched)
+        private mutating func stopUsingBonusTime() {
+            pastFaceUpTime = faceUpTime
+            self.lastFaceUpDate = nil
+        }
+        
     }
 }

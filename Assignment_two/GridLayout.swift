@@ -9,9 +9,9 @@
 import SwiftUI
 
 struct GridLayout {
-    var size: CGSize
-    var rowCount: Int = 0
-    var columnCount: Int = 0
+    private(set) var size: CGSize
+    private(set) var rowCount: Int = 0
+    private(set) var columnCount: Int = 0
     
     init(itemCount: Int, nearAspectRatio desiredAspectRatio: Double = 1, in size: CGSize) {
         self.size = size
@@ -36,8 +36,8 @@ struct GridLayout {
                 }
             }
         }
-        // -1 in the future, make it more dynamic, for now its for the button and text displays
-        rowCount = bestLayout.rowCount + 1
+
+        rowCount = bestLayout.rowCount 
         columnCount = bestLayout.columnCount
     }
     
